@@ -74,7 +74,32 @@ static float g_kd[LEG_JOINTS] = {0.0008f, 0.0008f, 0.0008f};
 #define USER_TORQUE_CAP_DEFAULT_NM         0.006f
 #define USER_TORQUE_CAP_MAX_NM             0.200f
 
-#define TARGET_LIMIT_RAD                   (10.0f * 0.01745329251994329577f)
+#define DEG_TO_RAD_F                       0.01745329251994329577f
+
+/* Joint limits are relative to the pose captured by ZERO.  Soft limits clamp
+ * PC SET targets; hard limits cut torque and disarm before a mechanical end
+ * stop.  They include the margin agreed from the measured mechanical travel. */
+static const float k_soft_min_rad[LEG_JOINTS] = {
+    -130.0f * DEG_TO_RAD_F, /* hip   */
+    -220.0f * DEG_TO_RAD_F, /* knee  */
+    -110.0f * DEG_TO_RAD_F  /* ankle */
+};
+static const float k_soft_max_rad[LEG_JOINTS] = {
+     30.0f * DEG_TO_RAD_F, /* hip   */
+     10.0f * DEG_TO_RAD_F, /* knee  */
+     25.0f * DEG_TO_RAD_F  /* ankle */
+};
+static const float k_hard_min_rad[LEG_JOINTS] = {
+    -145.0f * DEG_TO_RAD_F, /* hip   */
+    -235.0f * DEG_TO_RAD_F, /* knee  */
+    -120.0f * DEG_TO_RAD_F  /* ankle */
+};
+static const float k_hard_max_rad[LEG_JOINTS] = {
+     38.0f * DEG_TO_RAD_F, /* hip   */
+     18.0f * DEG_TO_RAD_F, /* knee  */
+     35.0f * DEG_TO_RAD_F  /* ankle */
+};
+
 #define TARGET_SLEW_RAD_S                  (20.0f * 0.01745329251994329577f)
 #define VELOCITY_FILTER_ALPHA              0.20f
 
@@ -806,10 +831,9 @@ static void handle_pc_line(uint32_t now_ms)
     }
 
     if (sscanf(g_pc_line, "SET %f %f %f", &a, &b, &c) == 3) {
-        const float degree_to_rad = 0.01745329251994329577f;
-        g_target_requested_rad[0] = clampf(a * degree_to_rad, -TARGET_LIMIT_RAD, TARGET_LIMIT_RAD);
-        g_target_requested_rad[1] = clampf(b * degree_to_rad, -TARGET_LIMIT_RAD, TARGET_LIMIT_RAD);
-        g_target_requested_rad[2] = clampf(c * degree_to_rad, -TARGET_LIMIT_RAD, TARGET_LIMIT_RAD);
+        g_target_requested_rad[0] = clampf(a * DEG_TO_RAD_F, k_soft_min_rad[0], k_soft_max_rad[0]);
+        g_target_requested_rad[1] = clampf(b * DEG_TO_RAD_F, k_soft_min_rad[1], k_soft_max_rad[1]);
+        g_target_requested_rad[2] = clampf(c * DEG_TO_RAD_F, k_soft_min_rad[2], k_soft_max_rad[2]);
         return;
     }
 
@@ -902,6 +926,15 @@ void LegPdPoc_Control1kHz(void)
     if ((now_ms - g_pc_last_command_ms) > PC_COMMAND_TIMEOUT_MS) {
         disarm("pc_timeout");
         return;
+    }
+
+    for (uint8_t joint = 0U; joint < LEG_JOINTS; ++joint) {
+        if (g_encoder[joint].q_rad < k_hard_min_rad[joint] ||
+            g_encoder[joint].q_rad > k_hard_max_rad[joint]) {
+            set_fault("joint_limit");
+            send_zero_and_idle_once();
+            return;
+        }
     }
 
     /* Wait until every axis confirms closed loop before applying nonzero torque. */
