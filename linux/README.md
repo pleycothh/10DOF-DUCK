@@ -1,3 +1,10 @@
+CLEAR
+ZERO
+POWER ON
+ARM
+GAINS 0.30 0.004 0.05
+PULSE 2 0.02
+
 # H723 three-joint outer-PD POC
 
 This is the first active controller for the leg, not the final RL interface.

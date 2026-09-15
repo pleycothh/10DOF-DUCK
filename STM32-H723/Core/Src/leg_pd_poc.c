@@ -18,7 +18,8 @@
  *     motor heartbeats are present.
  *   - Any encoder-node fault/staleness, motor error, or PC command timeout
  *     commands zero torque and requests ODrive IDLE.
- *   - Torque is hard-clamped to 0.010 N m at the motor (0.25 A for Kt=0.04).
+ *   - Torque is hard-clamped to 0.200 N m at the motor (about 5 A for
+ *     Kt=0.04).  This is the user's validated continuous bench-current limit.
  *   - Position targets are limited to +/-10 degrees from the captured pose.
  *
  * Do not increase these limits before the direction-pulse test in README.md.
@@ -56,16 +57,22 @@ static const uint8_t k_node_id[LEG_JOINTS] = {1U, 2U, 3U};
  * At the direction-pulse test, a +pulse must make the reported q increase.
  * Flip only the affected value to -1.0f if it makes q decrease.
  */
-static const float k_motor_torque_sign[LEG_JOINTS] = {+1.0f, +1.0f, +1.0f};
+/* Calibrated by the single-joint pulse tests: motor-positive torque decreases
+ * every corresponding external output angle, so all three joints invert it. */
+static const float k_motor_torque_sign[LEG_JOINTS] = {-1.0f, -1.0f, -1.0f};
 
 /* Initial conservative outer PD gains, in motor N m / output-rad. */
 static float g_kp[LEG_JOINTS] = {0.020f, 0.020f, 0.020f};
 static float g_kd[LEG_JOINTS] = {0.0008f, 0.0008f, 0.0008f};
 
 /* Never make the host command able to exceed this build-time hard limit. */
-#define HARD_TORQUE_CAP_NM                 0.010f
+/* Continuous bench-validation ceiling: 0.200 N m ~= 5 A at Kt=0.04 N m/A.
+ * Keep the default command cap below this so torque never increases merely by
+ * arming.  The separately requested 8 A / 3 s burst is intentionally not
+ * available through the normal GAINS command. */
+#define HARD_TORQUE_CAP_NM                 0.200f
 #define USER_TORQUE_CAP_DEFAULT_NM         0.006f
-#define USER_TORQUE_CAP_MAX_NM             0.010f
+#define USER_TORQUE_CAP_MAX_NM             0.200f
 
 #define TARGET_LIMIT_RAD                   (10.0f * 0.01745329251994329577f)
 #define TARGET_SLEW_RAD_S                  (20.0f * 0.01745329251994329577f)
@@ -82,8 +89,10 @@ static float g_kd[LEG_JOINTS] = {0.0008f, 0.0008f, 0.0008f};
 
 #define PC_COMMAND_TIMEOUT_MS              250U
 #define CAN_HEARTBEAT_MAX_AGE_MS           250U
-#define PULSE_DURATION_MS                  200U
-#define PULSE_MAX_TORQUE_NM                0.0020f
+/* Direction/strength calibration only.  0.050 N m is about 1.25 A for the
+ * assumed 0.04 N m/A motor Kt: below the configured 2 A bench limit. */
+#define PULSE_DURATION_MS                  500U
+#define PULSE_MAX_TORQUE_NM                0.0500f
 
 /*
  * DM-MC-Board02 has two PMOS-controlled power outputs.  Your copied project
@@ -193,8 +202,10 @@ static uint8_t g_uart1_rx_dma[96];
 static uint8_t g_uart10_rx_dma[64];
 static uint8_t g_g030_parser[G030_FRAME_BYTES];
 static uint8_t g_g030_parser_length = 0U;
-static uint8_t g_uart1_tx_dma[240];
+static uint8_t g_uart1_tx_dma[320];
 static volatile bool g_uart1_tx_busy = false;
+static volatile uint32_t g_uart1_tx_started_ms = 0U;
+static volatile uint32_t g_uart1_tx_timeout_count = 0U;
 
 /* --------------------------- Small utilities ----------------------------- */
 
@@ -599,7 +610,9 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if (huart == &huart1) g_uart1_tx_busy = false;
+    if (huart == &huart1) {
+        g_uart1_tx_busy = false;
+    }
 }
 
 /* ----------------------------- CAN receive -------------------------------- */
@@ -801,8 +814,8 @@ static void handle_pc_line(uint32_t now_ms)
     }
 
     if (sscanf(g_pc_line, "GAINS %f %f %f", &a, &b, &c) == 3) {
-        const float kp = clampf(a, 0.0f, 0.080f);
-        const float kd = clampf(b, 0.0f, 0.005f);
+        const float kp = clampf(a, 0.0f, 1.500f);
+        const float kd = clampf(b, 0.0f, 0.030f);
         g_user_torque_cap_nm = clampf(c, 0.0f, USER_TORQUE_CAP_MAX_NM);
         for (uint8_t index = 0U; index < LEG_JOINTS; ++index) {
             g_kp[index] = kp;
@@ -932,7 +945,18 @@ void LegPdPoc_Service(void)
 
     update_status_led(now_ms);
 
-    if (g_uart1_tx_busy || (now_ms - last_status_ms) < 20U) return;
+    /* A 320-byte 115200-baud frame needs < 30 ms.  Do not let a missed DMA
+     * completion interrupt permanently silence the PC telemetry. */
+    if (g_uart1_tx_busy) {
+        if ((now_ms - g_uart1_tx_started_ms) <= 50U) return;
+        (void)HAL_UART_AbortTransmit(&huart1);
+        g_uart1_tx_busy = false;
+        g_uart1_tx_timeout_count++;
+    }
+
+    /* 10 Hz is ample for PC/RL diagnostics and keeps the interactive console
+     * readable.  The G030/IMU/control paths remain at 1 kHz. */
+    if ((now_ms - last_status_ms) < 100U) return;
     last_status_ms = now_ms;
 
     const char *mode = (g_mode == POC_ARMED) ? "ARMED" :
@@ -944,7 +968,7 @@ void LegPdPoc_Service(void)
         "S t=%lu mode=%s foot=%u gage=%lu flags=%02X q=[%.2f,%.2f,%.2f] "
         "dq=[%.2f,%.2f,%.2f] des=[%.2f,%.2f,%.2f] tau=[%.4f,%.4f,%.4f] "
         "axis=[%u,%u,%u] e=[%08lX,%08lX,%08lX] can1rx=%lu last=0x%03X "
-        "pwr=%u imu=%u grz=%.2f fault=%s\\r\\n",
+        "pwr=%u imu=%u grz=%.2f uartto=%lu fault=%s\r\n",
         (unsigned long)now_ms, mode, foot_down, (unsigned long)g030_age, g_g030_flags,
         g_encoder[0].q_rad * RAD_TO_DEG_F,
         g_encoder[1].q_rad * RAD_TO_DEG_F,
@@ -962,10 +986,12 @@ void LegPdPoc_Service(void)
         (unsigned long)g_motor[2].axis_error,
         (unsigned long)can1_raw_rx_count, (unsigned int)can1_last_rx_id,
         g_motor_power_on ? 1U : 0U,
-        g_imu_ok ? 1U : 0U, g_imu_gyro[2], g_fault_reason);
+        g_imu_ok ? 1U : 0U, g_imu_gyro[2],
+        (unsigned long)g_uart1_tx_timeout_count, g_fault_reason);
 
     if (written > 0 && written < (int)sizeof(g_uart1_tx_dma)) {
         g_uart1_tx_busy = true;
+        g_uart1_tx_started_ms = now_ms;
         if (HAL_UART_Transmit_DMA(&huart1, g_uart1_tx_dma, (uint16_t)written) != HAL_OK) {
             g_uart1_tx_busy = false;
         }

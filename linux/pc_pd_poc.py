@@ -6,7 +6,8 @@ Example:
     python pc_pd_poc.py --port /dev/ttyUSB0
 
 The script transmits KEEP at 50 Hz after ARM.  If it is closed, the H723
-watchdog disarms the leg within 250 ms.
+watchdog disarms the leg within 250 ms.  H723 status lines are cached rather
+than printed continuously, so they never corrupt the interactive prompt.
 """
 
 from __future__ import annotations
@@ -53,15 +54,21 @@ def main() -> None:
         commands: queue.Queue[str] = queue.Queue()
         threading.Thread(target=console_input, args=(commands,), daemon=True).start()
 
-        print("Connected. Commands: POWER ON, POWER OFF, ZERO, ARM, DISARM, CLEAR, SET a b c, "
-              "GAINS kp kd torque_cap, PULSE joint torque, quit")
+        print("Connected. Commands sent to H723: POWER ON, POWER OFF, ZERO, ARM, DISARM, CLEAR, "
+              "SET a b c, GAINS kp kd torque_cap, PULSE joint torque. Local: s/status, quit")
         armed = False
         next_keep = time.monotonic()
+        latest_status = ""
 
         try:
             while True:
                 while not lines.empty():
-                    print(lines.get_nowait())
+                    line = lines.get_nowait()
+                    if line.startswith("S "):
+                        latest_status = line
+                    else:
+                        # Boot/error messages are rare and useful immediately.
+                        print(f"\n{line}")
 
                 now = time.monotonic()
                 if armed and now >= next_keep:
@@ -76,6 +83,11 @@ def main() -> None:
                 if command.lower() in {"quit", "exit"}:
                     port.write(b"DISARM\n")
                     break
+
+                # Local-only: never send this text to the H723.
+                if command.lower() in {"s", "status"}:
+                    print(latest_status if latest_status else "No H723 status received yet.")
+                    continue
 
                 if command:
                     port.write((command + "\n").encode("ascii"))
