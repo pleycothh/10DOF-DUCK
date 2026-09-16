@@ -1,9 +1,35 @@
+python pc_pd_poc.py --port COM4
+
+
 CLEAR
 ZERO
 POWER ON
 ARM
+
 GAINS 0.30 0.004 0.05
 PULSE 2 0.02
+
+然后每一级保持 5–10 秒，输入 s 观察姿态与 tau，再进入下一档：
+
+# 0.5 A
+GAINS 0.15 0.003 0.080
+
+# 2.0 A
+GAINS 0.80 0.010 0.12
+
+SET 0 0 0
+
+最终视频结构，2–3 分钟
+10 秒：硬件、双编码器、H723、CAN、三关节标注。
+20 秒：命令和状态屏幕，显示 heartbeat、encoder、foot、fault、torque cap。
+25 秒：RViz 数字腿与实机同步，单关节方向验证。
+30 秒：2 → 5 A 静态支撑曲线和电子秤结果。
+35 秒：脚端直线/椭圆轨迹跟踪。
+25 秒：下蹲—站起、保持姿势。
+15 秒：导轨辅助 hop。
+10 秒：安全演示：DISARM 或通信断开，扭矩归零。
+
+
 
 # H723 three-joint outer-PD POC
 

@@ -80,27 +80,29 @@ static float g_kd[LEG_JOINTS] = {0.0008f, 0.0008f, 0.0008f};
  * PC SET targets; hard limits cut torque and disarm before a mechanical end
  * stop.  They include the margin agreed from the measured mechanical travel. */
 static const float k_soft_min_rad[LEG_JOINTS] = {
-    -130.0f * DEG_TO_RAD_F, /* hip   */
-    -220.0f * DEG_TO_RAD_F, /* knee  */
-    -110.0f * DEG_TO_RAD_F  /* ankle */
+    -60.0f * DEG_TO_RAD_F, /* hip   */
+    -60.0f * DEG_TO_RAD_F, /* knee  */
+    -60.0f * DEG_TO_RAD_F  /* ankle */
 };
 static const float k_soft_max_rad[LEG_JOINTS] = {
-     30.0f * DEG_TO_RAD_F, /* hip   */
-     10.0f * DEG_TO_RAD_F, /* knee  */
-     25.0f * DEG_TO_RAD_F  /* ankle */
-};
-static const float k_hard_min_rad[LEG_JOINTS] = {
-    -145.0f * DEG_TO_RAD_F, /* hip   */
-    -235.0f * DEG_TO_RAD_F, /* knee  */
-    -120.0f * DEG_TO_RAD_F  /* ankle */
-};
-static const float k_hard_max_rad[LEG_JOINTS] = {
-     38.0f * DEG_TO_RAD_F, /* hip   */
-     18.0f * DEG_TO_RAD_F, /* knee  */
-     35.0f * DEG_TO_RAD_F  /* ankle */
+     60.0f * DEG_TO_RAD_F, /* hip   */
+     60.0f * DEG_TO_RAD_F, /* knee  */
+     60.0f * DEG_TO_RAD_F  /* ankle */
 };
 
-#define TARGET_SLEW_RAD_S                  (20.0f * 0.01745329251994329577f)
+static const float k_hard_min_rad[LEG_JOINTS] = {
+    -90.0f * DEG_TO_RAD_F, /* hip   */
+    -90.0f * DEG_TO_RAD_F, /* knee  */
+    -90.0f * DEG_TO_RAD_F  /* ankle */
+};
+
+static const float k_hard_max_rad[LEG_JOINTS] = {
+     90.0f * DEG_TO_RAD_F, /* hip   */
+     90.0f * DEG_TO_RAD_F, /* knee  */
+     90.0f * DEG_TO_RAD_F  /* ankle */
+};
+
+#define TARGET_SLEW_RAD_S                  (540.0f * 0.01745329251994329577f)
 #define VELOCITY_FILTER_ALPHA              0.20f
 
 #define G030_FRAME_BYTES                   19U
