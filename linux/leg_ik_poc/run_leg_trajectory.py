@@ -8,8 +8,7 @@ sends KEEP at 50 Hz, and always sends DISARM / POWER OFF on exit.
 The trajectory is intentionally a staging test, not a gait or a jump:
   1. smooth zero -> crouch centre over 3 s,
   2. fade in either a sole ellipse or a pure vertical sole motion at 0.25 Hz,
-  3. smooth return to the all-vertical ZERO pose,
-  4. actively hold ZERO for one minute (Ctrl-C safely ends early).
+  3. smooth return to the all-vertical ZERO pose.
 """
 
 from __future__ import annotations
@@ -36,7 +35,6 @@ DT_S = 1.0 / HZ
 DEFAULT_ENTRY_S = 3.0
 FADE_IN_S = 1.0
 DEFAULT_RETURN_S = 3.0
-DEFAULT_ZERO_HOLD_S = 60.0
 DEFAULT_ELLIPSE_PERIOD_S = 4.0
 CENTRE_X_M = 0.000
 CENTRE_Z_M = -0.250
@@ -245,19 +243,6 @@ def stream_target(port, target: tuple[float, float, float]) -> None:
     send(port, "KEEP")
 
 
-def hold_zero(port, received: queue.Queue[str], ros_publisher: "RosJointStatePublisher | None", duration_s: float) -> None:
-    """Keep the leg actively at its captured ZERO pose for a finite duration."""
-    print(f"Holding ZERO for {duration_s:.0f} s; press Ctrl-C to stop early.")
-    end_time = time.monotonic() + duration_s
-    while time.monotonic() < end_time:
-        tick_start = time.monotonic()
-        publish_received_statuses(received, ros_publisher)
-        stream_target(port, (0.0, 0.0, 0.0))
-        remaining = DT_S - (time.monotonic() - tick_start)
-        if remaining > 0.0:
-            time.sleep(remaining)
-
-
 def execute(args: argparse.Namespace, config: TrajectoryConfig) -> None:
     try:
         import serial
@@ -285,17 +270,13 @@ def execute(args: argparse.Namespace, config: TrajectoryConfig) -> None:
             time.sleep(0.20)
             send(port, "POWER ON")
             time.sleep(0.40)
-            # The UART reader runs from immediately after opening the port.
-            # Discard boot/previous-fault status lines before ARM so an old
-            # bad_pc_command cannot be mistaken for this ARM attempt failing.
-            publish_received_statuses(received, ros_publisher)
             send(port, "ARM")
             if not wait_for_armed(received, timeout_s=5.0):
                 raise RuntimeError("H723 did not report ARMED within 5 s")
 
             send(port, f"GAINS {args.kp:.4f} {args.kd:.4f} {args.torque_cap:.4f}")
             time.sleep(0.10)
-            print("ARMED: entering 3 s crouch, trajectory, returning to ZERO, then holding ZERO.")
+            print("ARMED: entering 3 s crouch, ellipse, then returning to ZERO.")
 
             for _, target in sample_targets(config):
                 tick_start = time.monotonic()
@@ -304,8 +285,6 @@ def execute(args: argparse.Namespace, config: TrajectoryConfig) -> None:
                 remaining = DT_S - (time.monotonic() - tick_start)
                 if remaining > 0.0:
                     time.sleep(remaining)
-
-            hold_zero(port, received, ros_publisher, args.zero_hold_s)
         except KeyboardInterrupt:
             print("Interrupted.")
         finally:
@@ -332,12 +311,6 @@ def main() -> None:
     parser.add_argument("--vertical-down-mm", type=float, default=None,
                         help="vertical mode: downward travel from z=-250 mm; defaults to --amplitude-z-mm")
     parser.add_argument("--period-s", type=float, default=DEFAULT_ELLIPSE_PERIOD_S)
-    parser.add_argument(
-        "--zero-hold-s",
-        type=float,
-        default=DEFAULT_ZERO_HOLD_S,
-        help="actively hold SET 0 0 0 after the trajectory; Ctrl-C ends early (default: 60)",
-    )
     parser.add_argument("--kp", type=float, default=0.50)
     parser.add_argument("--kd", type=float, default=0.010)
     parser.add_argument("--torque-cap", type=float, default=0.080, help="motor N m; 0.080 is about 2 A")
@@ -351,8 +324,6 @@ def main() -> None:
 
     if args.amplitude_z_mm <= 0.0 or args.period_s <= 0.0:
         raise SystemExit("Amplitude and period must be positive.")
-    if args.zero_hold_s < 0.0:
-        raise SystemExit("--zero-hold-s must be non-negative.")
     if args.motion == "ellipse" and args.amplitude_x_mm <= 0.0:
         raise SystemExit("Ellipse x amplitude must be positive.")
     vertical_up_mm = args.amplitude_z_mm if args.vertical_up_mm is None else args.vertical_up_mm

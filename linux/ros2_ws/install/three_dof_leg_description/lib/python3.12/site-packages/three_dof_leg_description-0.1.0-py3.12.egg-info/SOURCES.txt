@@ -1,0 +1,14 @@
+package.xml
+setup.cfg
+setup.py
+../../build/three_dof_leg_description/three_dof_leg_description.egg-info/PKG-INFO
+../../build/three_dof_leg_description/three_dof_leg_description.egg-info/SOURCES.txt
+../../build/three_dof_leg_description/three_dof_leg_description.egg-info/dependency_links.txt
+../../build/three_dof_leg_description/three_dof_leg_description.egg-info/requires.txt
+../../build/three_dof_leg_description/three_dof_leg_description.egg-info/top_level.txt
+../../build/three_dof_leg_description/three_dof_leg_description.egg-info/zip-safe
+launch/live_leg_rviz.launch.py
+resource/three_dof_leg_description
+rviz/live_leg.rviz
+three_dof_leg_description/__init__.py
+urdf/three_dof_leg.urdf

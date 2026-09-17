@@ -1,0 +1,38 @@
+[0.428s] Invoking command in '/home/ben/x/10DOF-DUCK/linux/ros2_ws/src/three_dof_leg_description': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/ben/x/10DOF-DUCK/linux/ros2_ws/build/three_dof_leg_description/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/three_dof_leg_description build --build-base /home/ben/x/10DOF-DUCK/linux/ros2_ws/build/three_dof_leg_description/build install --record /home/ben/x/10DOF-DUCK/linux/ros2_ws/build/three_dof_leg_description/install.log --install-scripts $base/lib/three_dof_leg_description --single-version-externally-managed install_data
+[0.568s] running egg_info
+[0.568s] creating ../../build/three_dof_leg_description/three_dof_leg_description.egg-info
+[0.578s] writing ../../build/three_dof_leg_description/three_dof_leg_description.egg-info/PKG-INFO
+[0.578s] writing dependency_links to ../../build/three_dof_leg_description/three_dof_leg_description.egg-info/dependency_links.txt
+[0.578s] writing requirements to ../../build/three_dof_leg_description/three_dof_leg_description.egg-info/requires.txt
+[0.578s] writing top-level names to ../../build/three_dof_leg_description/three_dof_leg_description.egg-info/top_level.txt
+[0.578s] writing manifest file '../../build/three_dof_leg_description/three_dof_leg_description.egg-info/SOURCES.txt'
+[0.598s] reading manifest file '../../build/three_dof_leg_description/three_dof_leg_description.egg-info/SOURCES.txt'
+[0.598s] writing manifest file '../../build/three_dof_leg_description/three_dof_leg_description.egg-info/SOURCES.txt'
+[0.598s] running build
+[0.598s] running build_py
+[0.598s] creating /home/ben/x/10DOF-DUCK/linux/ros2_ws/build/three_dof_leg_description/build
+[0.599s] creating /home/ben/x/10DOF-DUCK/linux/ros2_ws/build/three_dof_leg_description/build/lib
+[0.599s] creating /home/ben/x/10DOF-DUCK/linux/ros2_ws/build/three_dof_leg_description/build/lib/three_dof_leg_description
+[0.599s] copying three_dof_leg_description/__init__.py -> /home/ben/x/10DOF-DUCK/linux/ros2_ws/build/three_dof_leg_description/build/lib/three_dof_leg_description
+[0.599s] running install
+[0.602s] running install_lib
+[0.612s] creating /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/lib/python3.12/site-packages/three_dof_leg_description
+[0.612s] copying /home/ben/x/10DOF-DUCK/linux/ros2_ws/build/three_dof_leg_description/build/lib/three_dof_leg_description/__init__.py -> /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/lib/python3.12/site-packages/three_dof_leg_description
+[0.612s] byte-compiling /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/lib/python3.12/site-packages/three_dof_leg_description/__init__.py to __init__.cpython-312.pyc
+[0.613s] running install_data
+[0.613s] creating /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/share/ament_index
+[0.613s] creating /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/share/ament_index/resource_index
+[0.613s] creating /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/share/ament_index/resource_index/packages
+[0.613s] copying resource/three_dof_leg_description -> /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/share/ament_index/resource_index/packages
+[0.613s] copying package.xml -> /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/share/three_dof_leg_description
+[0.613s] creating /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/share/three_dof_leg_description/launch
+[0.613s] copying launch/live_leg_rviz.launch.py -> /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/share/three_dof_leg_description/launch
+[0.613s] creating /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/share/three_dof_leg_description/urdf
+[0.613s] copying urdf/three_dof_leg.urdf -> /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/share/three_dof_leg_description/urdf
+[0.613s] creating /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/share/three_dof_leg_description/rviz
+[0.613s] copying rviz/live_leg.rviz -> /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/share/three_dof_leg_description/rviz
+[0.613s] running install_egg_info
+[0.624s] Copying ../../build/three_dof_leg_description/three_dof_leg_description.egg-info to /home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/lib/python3.12/site-packages/three_dof_leg_description-0.1.0-py3.12.egg-info
+[0.624s] running install_scripts
+[0.692s] writing list of installed files to '/home/ben/x/10DOF-DUCK/linux/ros2_ws/build/three_dof_leg_description/install.log'
+[0.707s] Invoked command in '/home/ben/x/10DOF-DUCK/linux/ros2_ws/src/three_dof_leg_description' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/ben/x/10DOF-DUCK/linux/ros2_ws/build/three_dof_leg_description/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ben/x/10DOF-DUCK/linux/ros2_ws/install/three_dof_leg_description/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/three_dof_leg_description build --build-base /home/ben/x/10DOF-DUCK/linux/ros2_ws/build/three_dof_leg_description/build install --record /home/ben/x/10DOF-DUCK/linux/ros2_ws/build/three_dof_leg_description/install.log --install-scripts $base/lib/three_dof_leg_description --single-version-externally-managed install_data

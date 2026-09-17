@@ -1,5 +1,6 @@
 python pc_pd_poc.py --port COM4
 
+python3 pc_pd_poc.py --port /dev/ttyACM0
 
 CLEAR
 ZERO

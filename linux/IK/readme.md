@@ -1,4 +1,4 @@
-
+# WIndows:
 python .\run_leg_trajectory.py --port COM4 `
   --amplitude-x-mm 15 --amplitude-z-mm 7.5 `
   --kp 0.50 --kd 0.010 --torque-cap 0.120 --execute
@@ -8,6 +8,12 @@ python .\run_leg_trajectory.py `
   --vertical-up-mm 20 --vertical-down-mm 15 `
   --kp 0.50 --kd 0.010 --torque-cap 0.120  --execute
 
+# LINUX:
+python3 run_leg_trajectory.py --port /dev/ttyACM0 --amplitude-x-mm 15 --amplitude-z-mm 7.5 --kp 0.50 --kd 0.010 --torque-cap 0.120 --ros2 --execute
+
+
+
+# AI read me
 3-DOF FOC Leg — Offline FK/IK
 
 This is the safe, offline first step for the H723 three-joint leg.  It does not
