@@ -105,7 +105,7 @@ static const float k_hard_max_rad[LEG_JOINTS] = {
 #define TARGET_SLEW_RAD_S                  (540.0f * 0.01745329251994329577f)
 #define VELOCITY_FILTER_ALPHA              0.20f
 
-#define G030_FRAME_BYTES                   19U
+#define G030_FRAME_BYTES                   19UC
 #define G030_SOF0                          0xA5U
 #define G030_SOF1                          0x5AU
 #define G030_VERSION                       3U

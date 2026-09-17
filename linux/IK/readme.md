@@ -1,12 +1,12 @@
 
 python .\run_leg_trajectory.py --port COM4 `
   --amplitude-x-mm 15 --amplitude-z-mm 7.5 `
-  --kp 0.80 --kd 0.010 --torque-cap 0.120 --execute
+  --kp 0.50 --kd 0.010 --torque-cap 0.120 --execute
 
 python .\run_leg_trajectory.py `
   --motion vertical `
   --vertical-up-mm 20 --vertical-down-mm 15 `
-  --kp 0.80 --kd 0.010 --torque-cap 0.120  --execute
+  --kp 0.50 --kd 0.010 --torque-cap 0.120  --execute
 
 3-DOF FOC Leg — Offline FK/IK
 
